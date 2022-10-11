@@ -1,4 +1,6 @@
 defmodule Cim.Router do
+  alias Cim.Store
+
   use Plug.Router
   import Plug.Conn
   plug(:match)
@@ -12,7 +14,7 @@ defmodule Cim.Router do
   plug(:dispatch)
 
   get "/:database/:key" do
-    case Cim.Database.retrieve_key(database, key) do
+    case Store.retrieve_key(database, key) do
       {:ok, value} ->
         conn
         |> put_resp_content_type("application/octet-stream")
@@ -36,7 +38,7 @@ defmodule Cim.Router do
 
     # TODO: Validation
     if value do
-      Cim.Database.put_key(database, key, value)
+      Store.put_key(database, key, value)
       send_resp(conn, 200, [])
     else
       send_resp(conn, 400, "Bad request")
@@ -44,12 +46,21 @@ defmodule Cim.Router do
   end
 
   delete "/:database" do
-    IO.inspect("Delete database")
-    send_resp(conn, 200, [])
+    case Store.delete_database(database) do
+      :ok ->
+        send_resp(conn, 200, [])
+
+      {:error, :database_not_found} ->
+        send_resp(conn, 404, "Not found")
+    end
   end
 
   delete "/:database/:key" do
-    IO.inspect("Delete database key")
-    send_resp(conn, 200, [])
+    case Store.delete_key(database, key) do
+      :ok -> send_resp(conn, 200, [])
+      {:error, :key_not_found} -> send_resp(conn, 404, "Not found")
+    end
   end
+
+  # TODO: Add match that returns 404 for any other route
 end
