@@ -1,8 +1,7 @@
 defmodule CimTest do
   use ExUnit.Case
-  doctest Cim
 
   test "greets the world" do
-    assert Cim.hello() == :world
+    assert Cim.Database.hello() == :world
   end
 end
