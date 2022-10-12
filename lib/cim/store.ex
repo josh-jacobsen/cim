@@ -32,7 +32,7 @@ defmodule Cim.Store do
     end)
   end
 
-  @spec put_key(any, any, any) :: :ok
+  @spec put_key(String.t(), String.t(), String.t()) :: :ok
   @doc """
   Puts the `value` for the given `key` in the in-memory database.
   """

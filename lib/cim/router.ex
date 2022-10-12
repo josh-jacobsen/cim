@@ -1,8 +1,11 @@
 defmodule Cim.Router do
-  alias Cim.Store
+  import Plug.Conn
 
   use Plug.Router
-  import Plug.Conn
+  use Plug.ErrorHandler
+
+  alias Cim.Store
+
   plug(:match)
 
   plug(Plug.Parsers,
@@ -26,18 +29,13 @@ defmodule Cim.Router do
   end
 
   put "/:database/:key" do
-    # TODO: Validation
-    value =
-      case conn.body_params do
-        %{"value" => a_value} -> a_value
-        _ -> nil
-      end
+    case validate_input(conn.body_params) do
+      {:ok, value} ->
+        Store.put_key(database, key, value)
+        send_resp(conn, 200, [])
 
-    if value do
-      Store.put_key(database, key, value)
-      send_resp(conn, 200, [])
-    else
-      send_resp(conn, 400, "Bad request")
+      {:error, :validation_failed} ->
+        send_resp(conn, 400, "Bad request")
     end
   end
 
@@ -58,5 +56,30 @@ defmodule Cim.Router do
     end
   end
 
-  # TODO: Add match that returns 404 for any other route
+  match _ do
+    send_resp(conn, 404, "Page not found")
+  end
+
+  defp handle_errors(conn, %{kind: kind, reason: reason, stack: stack}) do
+    IO.inspect(kind, label: :kind)
+    IO.inspect(reason, label: :reason)
+    IO.inspect(stack, label: :stack)
+    send_resp(conn, 500, "Something went wrong")
+  end
+
+  defp validate_input(%{"value" => input}) do
+    validate_input_is_string(input)
+  end
+
+  defp validate_input(_) do
+    {:error, :validation_failed}
+  end
+
+  defp validate_input_is_string(input) when is_binary(input) do
+    {:ok, input}
+  end
+
+  defp validate_input_is_string(_) do
+    {:error, :validation_failed}
+  end
 end
