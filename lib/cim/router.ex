@@ -26,17 +26,13 @@ defmodule Cim.Router do
   end
 
   put "/:database/:key" do
-    # TODO validate that they input is of a sane length and sanitize
-    # Consider calling `to_atom` if I can find a way of doing it that won't blow up the system
-    # on long input
-    # Make sure that value is a string
+    # TODO: Validation
     value =
       case conn.body_params do
         %{"value" => a_value} -> a_value
-        _ -> ""
+        _ -> nil
       end
 
-    # TODO: Validation
     if value do
       Store.put_key(database, key, value)
       send_resp(conn, 200, [])
