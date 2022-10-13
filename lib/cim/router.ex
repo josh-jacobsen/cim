@@ -8,12 +8,6 @@ defmodule Cim.Router do
 
   plug(:match)
 
-  plug(Plug.Parsers,
-    parsers: [:json],
-    pass: ["application/json"],
-    json_decoder: Jason
-  )
-
   plug(:dispatch)
 
   get "/:database/:key" do
@@ -29,31 +23,40 @@ defmodule Cim.Router do
   end
 
   put "/:database/:key" do
-    case validate_input(conn.body_params) do
-      {:ok, value} ->
-        Store.put_key(database, key, value)
+    case read_body(conn) do
+      {:ok, body, _} ->
+        Store.put_key(database, key, body)
         send_resp(conn, 200, [])
 
-      {:error, :validation_failed} ->
+      _ ->
         send_resp(conn, 400, "Bad request")
     end
   end
 
   delete "/:database" do
+    IO.puts("deleting database #{database}")
+
     case Store.delete_database(database) do
-      :ok ->
+      {:ok, _} ->
         send_resp(conn, 200, [])
 
-      {:error, :database_not_found} ->
+      {:error, :not_found} ->
         send_resp(conn, 404, "Not found")
     end
   end
 
   delete "/:database/:key" do
     case Store.delete_key(database, key) do
-      :ok -> send_resp(conn, 200, [])
-      {:error, :key_not_found} -> send_resp(conn, 404, "Not found")
+      {:ok, _} ->
+        send_resp(conn, 200, [])
+
+      {:error, :not_found} ->
+        send_resp(conn, 404, "Not found")
     end
+  end
+
+  get "/hello" do
+    send_resp(conn, 200, "world")
   end
 
   match _ do
@@ -65,21 +68,5 @@ defmodule Cim.Router do
     IO.inspect(reason, label: :reason)
     IO.inspect(stack, label: :stack)
     send_resp(conn, 500, "Something went wrong")
-  end
-
-  defp validate_input(%{"value" => input}) do
-    validate_input_is_string(input)
-  end
-
-  defp validate_input(_) do
-    {:error, :validation_failed}
-  end
-
-  defp validate_input_is_string(input) when is_binary(input) do
-    {:ok, input}
-  end
-
-  defp validate_input_is_string(_) do
-    {:error, :validation_failed}
   end
 end
