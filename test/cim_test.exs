@@ -1,4 +1,4 @@
-defmodule Cim.RouterTest do
+defmodule Cim.Test do
   use ExUnit.Case
   use Plug.Test
 

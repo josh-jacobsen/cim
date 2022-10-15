@@ -9,7 +9,7 @@ defmodule Cim.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      Cim.Store,
+      Cim.StoreServer,
       {Plug.Cowboy, scheme: :http, plug: Cim.Router, options: [port: 4001]}
       # Starts a worker by calling: Cim.Worker.start_link(arg)
       # {Cim.Worker, arg}

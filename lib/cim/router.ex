@@ -23,6 +23,7 @@ defmodule Cim.Router do
   end
 
   put "/:database/:key" do
+    # TODO: Clean up this implementation
     case read_body(conn) do
       {:ok, body, _} ->
         Store.put_key(database, key, body)
@@ -34,10 +35,8 @@ defmodule Cim.Router do
   end
 
   delete "/:database" do
-    IO.puts("deleting database #{database}")
-
     case Store.delete_database(database) do
-      {:ok, _} ->
+      :ok ->
         send_resp(conn, 200, [])
 
       {:error, :not_found} ->
@@ -55,18 +54,11 @@ defmodule Cim.Router do
     end
   end
 
-  get "/hello" do
-    send_resp(conn, 200, "world")
-  end
-
   match _ do
     send_resp(conn, 404, "Page not found")
   end
 
-  defp handle_errors(conn, %{kind: kind, reason: reason, stack: stack}) do
-    IO.inspect(kind, label: :kind)
-    IO.inspect(reason, label: :reason)
-    IO.inspect(stack, label: :stack)
+  defp handle_errors(conn, %{kind: _kind, reason: _reason, stack: _stack}) do
     send_resp(conn, 500, "Something went wrong")
   end
 end
