@@ -6,13 +6,13 @@ defmodule Cim.Store do
   alias Cim.StoreServer
 
   @spec retrieve_key(StoreServer.database_name(), StoreServer.key()) ::
-          {:error, :not_found} | {:ok, binary}
+          {:error, :not_found} | {:ok, StoreServer.value()}
   def retrieve_key(database, key) do
     StoreServer.retrieve_key(database, key)
     |> send_response()
   end
 
-  @spec put_key(String.t(), String.t(), String.t()) :: :ok
+  @spec put_key(StoreServer.database_name(), StoreServer.key(), StoreServer.value()) :: :ok
   def put_key(database, key, value) do
     if StoreServer.database_exists?(database) do
       StoreServer.put_key_existing_database(database, key, value)
@@ -21,13 +21,14 @@ defmodule Cim.Store do
     end
   end
 
-  @spec delete_key(String.t(), String.t()) :: {:error, :not_found} | {:ok, binary}
+  @spec delete_key(StoreServer.database_name(), StoreServer.key()) ::
+          {:error, :not_found} | {:ok, binary}
   def delete_key(database, key) do
     StoreServer.delete_key(database, key)
     |> send_response()
   end
 
-  @spec delete_database(String.t()) :: :ok | {:error, :not_found}
+  @spec delete_database(StoreServer.database_name()) :: :ok | {:error, :not_found}
   def delete_database(database) do
     StoreServer.delete_database(database)
     |> send_response()

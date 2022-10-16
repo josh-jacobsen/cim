@@ -15,7 +15,7 @@ defmodule Cim.StoreServer do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
-  @impl true
+  @impl GenServer
   @spec init(any) :: {:ok, any}
   def init(state) do
     {:ok, state}
@@ -51,34 +51,34 @@ defmodule Cim.StoreServer do
     GenServer.call(__MODULE__, {:database_exists, database_name})
   end
 
-  @impl true
+  @impl GenServer
   def handle_call({:retrieve_key, database, key}, _from, state) do
     {:reply, {:ok, get_in(state, [database, key])}, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_call({:put_key_new_database, database, key, value}, _from, state) do
     {:reply, :ok, Map.put(state, database, %{key => value})}
   end
 
-  @impl true
+  @impl GenServer
   def handle_call({:put_key_existing_database, database, key, value}, _from, state) do
     {:reply, :ok, put_in(state, [database, key], value)}
   end
 
-  @impl true
+  @impl GenServer
   def handle_call({:delete_key, database, key}, _from, state) do
     {deleted_key, new_state} = pop_in(state, [database, key])
     {:reply, {:ok, deleted_key}, new_state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_call({:delete_database, database}, _from, state) do
     {deleted_database, new_state} = Map.pop(state, database)
     {:reply, {:ok, deleted_database}, new_state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_call({:database_exists, database}, _from, state) do
     {:reply, Map.has_key?(state, database), state}
   end
