@@ -26,6 +26,10 @@ defmodule Cim.StoreServer do
     GenServer.call(__MODULE__, {:retrieve_key, database_name, key})
   end
 
+  def retrieve_database(database_name) do
+    GenServer.call(__MODULE__, {:retrieve_database, database_name})
+  end
+
   @spec put_key_new_database(database_name(), key(), value()) :: :ok
   def put_key_new_database(database_name, key, value) do
     GenServer.call(__MODULE__, {:put_key_new_database, database_name, key, value})
@@ -81,5 +85,10 @@ defmodule Cim.StoreServer do
   @impl GenServer
   def handle_call({:database_exists, database}, _from, state) do
     {:reply, Map.has_key?(state, database), state}
+  end
+
+  @impl GenServer
+  def handle_call({:retrieve_database, database}, _from, state) do
+    {:reply, Map.get(state, database), state}
   end
 end

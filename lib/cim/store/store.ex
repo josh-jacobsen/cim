@@ -7,18 +7,27 @@ defmodule Cim.Store do
 
   @spec retrieve_key(StoreServer.database_name(), StoreServer.key()) ::
           {:error, :not_found} | {:ok, StoreServer.value()}
-  def retrieve_key(database, key) do
-    StoreServer.retrieve_key(database, key)
+  def retrieve_key(database_name, key) do
+    StoreServer.retrieve_key(database_name, key)
     |> send_response()
   end
 
   @spec put_key(StoreServer.database_name(), StoreServer.key(), StoreServer.value()) :: :ok
   def put_key(database, key, value) do
-    if StoreServer.database_exists?(database) do
+    if database_exists?(database) do
       StoreServer.put_key_existing_database(database, key, value)
     else
       StoreServer.put_key_new_database(database, key, value)
     end
+  end
+
+  @spec database_exists?(StoreServer.database_name()) :: boolean()
+  def database_exists?(database_name) do
+    StoreServer.database_exists?(database_name)
+  end
+
+  def retrieve_database(database_name) do
+    StoreServer.retrieve_database(database_name) |> send_response()
   end
 
   @spec delete_key(StoreServer.database_name(), StoreServer.key()) ::
@@ -28,7 +37,7 @@ defmodule Cim.Store do
     |> send_response()
   end
 
-  @spec delete_database(StoreServer.database_name()) :: :ok | {:error, :not_found}
+  @spec delete_database(binary) :: {:error, :not_found} | {:ok, binary | map}
   def delete_database(database) do
     StoreServer.delete_database(database)
     |> send_response()
@@ -38,8 +47,8 @@ defmodule Cim.Store do
     {:ok, value}
   end
 
-  defp send_response({:ok, %{}}) do
-    :ok
+  defp send_response({:ok, value}) when is_map(value) do
+    {:ok, value}
   end
 
   defp send_response(_) do
