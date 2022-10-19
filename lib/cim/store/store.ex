@@ -26,8 +26,11 @@ defmodule Cim.Store do
     StoreServer.database_exists?(database_name)
   end
 
+  @spec retrieve_database(StoreServer.database_name()) ::
+          {:error, :not_found} | {:ok, binary | map}
   def retrieve_database(database_name) do
-    StoreServer.retrieve_database(database_name) |> send_response()
+    StoreServer.retrieve_database(database_name)
+    |> send_response()
   end
 
   @spec delete_key(StoreServer.database_name(), StoreServer.key()) ::
@@ -43,12 +46,29 @@ defmodule Cim.Store do
     |> send_response()
   end
 
+  def execute_lua(database, database_name, script) do
+    StoreServer.execute_lua(database, database_name, script)
+    |> send_response()
+  end
+
   defp send_response({:ok, value}) when is_binary(value) do
     {:ok, value}
   end
 
   defp send_response({:ok, value}) when is_map(value) do
     {:ok, value}
+  end
+
+  defp send_response(value) when is_map(value) do
+    {:ok, value}
+  end
+
+  defp send_response(:ok) do
+    {:ok, nil}
+  end
+
+  defp send_response({:error, :value_not_found}) do
+    {:error, :value_not_found}
   end
 
   defp send_response(_) do

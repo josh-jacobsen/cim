@@ -4,20 +4,24 @@ defmodule Cim.Router do
   use Plug.Router
   use Plug.ErrorHandler
 
-  alias Cim.{Store, Luerl}
+  alias Cim.Store
 
   plug(:match)
 
   plug(:dispatch)
 
   get "/:database/:key" do
-    case Store.retrieve_key(database, key) do
-      {:ok, value} ->
-        conn
-        |> send_success_response(value)
+    if Store.database_exists?(database) do
+      case Store.retrieve_key(database, key) do
+        {:ok, value} ->
+          conn
+          |> send_success_response(value)
 
-      {:error, _reason} ->
-        send_400_error_response(conn, "Key not found")
+        {:error, _reason} ->
+          send_not_found_response(conn, "Key not found")
+      end
+    else
+      send_not_found_response(conn, "Database does not exist")
     end
   end
 
@@ -54,11 +58,11 @@ defmodule Cim.Router do
 
   post "/:database" do
     with {:ok, body, conn} <- read_body(conn),
-         true <- Store.database_exists?(database),
-         {:ok, value} <- Luerl.execute(database, body) do
+         {:ok, retrieved_database} <- Store.retrieve_database(database),
+         {:ok, value} <- Store.execute_lua(retrieved_database, database, body) do
       send_success_response(conn, value)
     else
-      false ->
+      {:error, :not_found} ->
         send_not_found_response(conn, "Database does not exist")
 
       {:error, :value_not_found} ->
@@ -77,7 +81,7 @@ defmodule Cim.Router do
   end
 
   defp handle_errors(conn, %{kind: _kind, reason: _reason, stack: _stack}) do
-    send_resp(conn, 500, "Something went wrong")
+    send_500_error_response(conn)
   end
 
   defp send_success_response(connection, value) do
@@ -87,8 +91,6 @@ defmodule Cim.Router do
   end
 
   defp send_not_found_response(connection, message) do
-    IO.puts("sending not found response")
-
     connection
     |> send_resp(404, message)
   end

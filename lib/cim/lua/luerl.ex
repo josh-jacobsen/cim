@@ -5,8 +5,6 @@ defmodule Cim.Luerl do
   @write "write"
   @delete "delete"
 
-  @spec execute(any, binary | maybe_improper_list) ::
-          {:error, :undefined_function | {:lua_error, any}} | {:ok, list}
   def execute(database, script) do
     {:ok, chunk, next_state} =
       init(database)
@@ -50,29 +48,21 @@ defmodule Cim.Luerl do
 
   defp read(database) do
     fn [key | _], state ->
-      case Store.retrieve_key(database, key) do
-        {:ok, value} ->
-          {[value], state}
-
-        {:error, _reason} ->
-          {[nil], state}
-      end
+      value = Map.get(database, key)
+      {[value], state}
     end
   end
 
   defp write(database) do
     fn [key, value | _], state ->
-      Store.put_key(database, key, value)
-      {[value], state}
+      {[put_in(database, [key], value)], state}
     end
   end
 
   defp delete(database) do
     fn [key | _], state ->
-      case Store.delete_key(database, key) do
-        {:ok, key} -> {[key], state}
-        {:error, _} -> {[nil], state}
-      end
+      {_deleted_key, new_database} = pop_in(database, [key])
+      {[new_database], state}
     end
   end
 

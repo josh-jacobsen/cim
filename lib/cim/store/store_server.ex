@@ -3,6 +3,7 @@ defmodule Cim.StoreServer do
   Implementation of the database server
   """
 
+  alias Cim.Luerl
   use GenServer
 
   @type value :: binary
@@ -28,6 +29,10 @@ defmodule Cim.StoreServer do
 
   def retrieve_database(database_name) do
     GenServer.call(__MODULE__, {:retrieve_database, database_name})
+  end
+
+  def execute_lua(database, database_name, script) do
+    GenServer.call(__MODULE__, {:execute_lua, database, database_name, script})
   end
 
   @spec put_key_new_database(database_name(), key(), value()) :: :ok
@@ -90,5 +95,21 @@ defmodule Cim.StoreServer do
   @impl GenServer
   def handle_call({:retrieve_database, database}, _from, state) do
     {:reply, Map.get(state, database), state}
+  end
+
+  @impl GenServer
+  def handle_call({:execute_lua, database, database_name, script}, _from, state) do
+    case Luerl.execute(database, script) do
+      {:ok, value} when is_list(value) ->
+        result_map = Enum.into(value, %{})
+        new_state = Map.replace(state, database_name, result_map)
+        {:reply, :ok, new_state}
+
+      {:ok, value} ->
+        {:reply, {:ok, value}, state}
+
+      {:error, :value_not_found} ->
+        {:reply, {:error, :value_not_found}, state}
+    end
   end
 end
