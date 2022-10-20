@@ -51,16 +51,16 @@ defmodule Cim.Store do
     |> send_response()
   end
 
+  defp send_response({:ok, ""}) do
+    {:ok, nil}
+  end
+
   defp send_response({:ok, value}) when is_binary(value) do
     {:ok, value}
   end
 
   defp send_response({:ok, value}) when is_map(value) do
     {:ok, value}
-  end
-
-  defp send_response({:ok, value}) when is_nil(value) do
-    {:ok, nil}
   end
 
   defp send_response(value) when is_map(value) do

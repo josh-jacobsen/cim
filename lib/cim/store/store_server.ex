@@ -104,14 +104,13 @@ defmodule Cim.StoreServer do
     if db do
       case Luerl.execute(script, db) do
         {:ok, value, updated_db} ->
-          IO.inspect(value, label: "value")
           {:reply, {:ok, value}, Map.put(state, database_name, updated_db)}
 
         {:error, reason} ->
           {:reply, {:error, reason}, state}
       end
     else
-      {:error, :db_not_found}
+      {:reply, {:error, :db_not_found}, state}
     end
   end
 end
