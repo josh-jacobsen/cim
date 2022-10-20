@@ -31,8 +31,8 @@ defmodule Cim.StoreServer do
     GenServer.call(__MODULE__, {:retrieve_database, database_name})
   end
 
-  def execute_lua(database, database_name, script) do
-    GenServer.call(__MODULE__, {:execute_lua, database, database_name, script})
+  def execute_lua(database_name, script) do
+    GenServer.call(__MODULE__, {:execute_lua, database_name, script})
   end
 
   @spec put_key_new_database(database_name(), key(), value()) :: :ok
@@ -98,18 +98,20 @@ defmodule Cim.StoreServer do
   end
 
   @impl GenServer
-  def handle_call({:execute_lua, database, database_name, script}, _from, state) do
-    case Luerl.execute(database, script) do
-      {:ok, value} when is_list(value) ->
-        result_map = Enum.into(value, %{})
-        new_state = Map.replace(state, database_name, result_map)
-        {:reply, :ok, new_state}
+  def handle_call({:execute_lua, database_name, script}, _from, state) do
+    db = Map.get(state, database_name)
 
-      {:ok, value} ->
-        {:reply, {:ok, value}, state}
+    if db do
+      case Luerl.execute(script, db) do
+        {:ok, value, updated_db} ->
+          IO.inspect(value, label: "value")
+          {:reply, {:ok, value}, Map.put(state, database_name, updated_db)}
 
-      {:error, :value_not_found} ->
-        {:reply, {:error, :value_not_found}, state}
+        {:error, reason} ->
+          {:reply, {:error, reason}, state}
+      end
+    else
+      {:error, :db_not_found}
     end
   end
 end

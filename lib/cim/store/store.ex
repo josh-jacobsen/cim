@@ -46,8 +46,8 @@ defmodule Cim.Store do
     |> send_response()
   end
 
-  def execute_lua(database, database_name, script) do
-    StoreServer.execute_lua(database, database_name, script)
+  def execute_lua(database_name, script) do
+    StoreServer.execute_lua(database_name, script)
     |> send_response()
   end
 
@@ -57,6 +57,10 @@ defmodule Cim.Store do
 
   defp send_response({:ok, value}) when is_map(value) do
     {:ok, value}
+  end
+
+  defp send_response({:ok, value}) when is_nil(value) do
+    {:ok, nil}
   end
 
   defp send_response(value) when is_map(value) do
@@ -69,6 +73,10 @@ defmodule Cim.Store do
 
   defp send_response({:error, :value_not_found}) do
     {:error, :value_not_found}
+  end
+
+  defp send_response({:error, :db_not_found}) do
+    {:error, :db_not_found}
   end
 
   defp send_response(_) do

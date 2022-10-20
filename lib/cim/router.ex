@@ -58,11 +58,10 @@ defmodule Cim.Router do
 
   post "/:database" do
     with {:ok, body, conn} <- read_body(conn),
-         {:ok, retrieved_database} <- Store.retrieve_database(database),
-         {:ok, value} <- Store.execute_lua(retrieved_database, database, body) do
+         {:ok, value} <- Store.execute_lua(database, body) do
       send_success_response(conn, value)
     else
-      {:error, :not_found} ->
+      {:error, :db_not_found} ->
         send_not_found_response(conn, "Database does not exist")
 
       {:error, :value_not_found} ->
