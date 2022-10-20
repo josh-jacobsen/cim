@@ -67,12 +67,13 @@ defmodule Cim.StoreServer do
 
   @impl GenServer
   def handle_call({:put_key_new_database, database, key, value}, _from, state) do
-    {:reply, :ok, Map.put(state, database, %{key => value})}
+    {:reply, :ok, Map.put(state, database, %{to_string(key) => value})}
   end
 
   @impl GenServer
   def handle_call({:put_key_existing_database, database, key, value}, _from, state) do
-    {:reply, :ok, put_in(state, [database, key], value)}
+    new_state = put_in(state, [database, to_string(key)], value)
+    {:reply, :ok, new_state}
   end
 
   @impl GenServer

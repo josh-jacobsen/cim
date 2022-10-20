@@ -91,7 +91,7 @@ defmodule Cim.Test do
 
     assert response.state == :sent
     assert response.status == 404
-    assert response.resp_body == "Not found"
+    assert response.resp_body == "Database does not exist"
   end
 
   test "returns 404 if key to delete does not exist" do
@@ -101,6 +101,6 @@ defmodule Cim.Test do
 
     assert response.state == :sent
     assert response.status == 404
-    assert response.resp_body == "Not found"
+    assert response.resp_body == "Key does not exist"
   end
 end

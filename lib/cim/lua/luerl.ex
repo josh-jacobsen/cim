@@ -14,7 +14,9 @@ defmodule Cim.Luerl do
     end
   end
 
-  defp read([field], state), do: {[Map.get(get_trace_data(state), field)], state}
+  defp read([field], state) do
+    {[Map.get(get_trace_data(state), field)], state}
+  end
 
   defp write([field, value], state) do
     value = to_string(value)
