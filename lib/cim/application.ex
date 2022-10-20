@@ -10,7 +10,7 @@ defmodule Cim.Application do
   def start(_type, _args) do
     children = [
       Cim.StoreServer,
-      {Plug.Cowboy, scheme: :http, plug: Cim.Router, options: [port: 4001]}
+      {Plug.Cowboy, scheme: :http, plug: Cim.Router, options: [port: port()]}
       # Starts a worker by calling: Cim.Worker.start_link(arg)
       # {Cim.Worker, arg}
     ]
@@ -22,5 +22,13 @@ defmodule Cim.Application do
     Logger.info("Starting application...")
 
     Supervisor.start_link(children, opts)
+  end
+
+  defp port() do
+    port = Application.fetch_env!(:cim, :port)
+
+    case Integer.parse(port) do
+      {value, _} -> value
+    end
   end
 end
