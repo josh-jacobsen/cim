@@ -64,8 +64,8 @@ defmodule Cim.Router do
       {:error, :db_not_found} ->
         send_not_found_response(conn, "Database does not exist")
 
-      {:error, {:lua_error, reason}} ->
-        send_400_error_response(conn, reason)
+      {:error, :lua_error} ->
+        send_400_error_response(conn, "Error with the Lua code")
 
       {:error, :not_found} ->
         send_not_found_response(conn, "Not found")

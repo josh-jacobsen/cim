@@ -9,8 +9,11 @@ defmodule Cim.Luerl do
     |> set_table([:cim, :delete], &delete/2)
     |> exec(code)
     |> case do
-      {:ok, [result], state} -> {:ok, to_string(result), get_trace_data(state)}
-      {:error, reason} -> {:error, reason}
+      {:ok, [result], state} ->
+        {:ok, to_string(result), get_trace_data(state)}
+
+      {:error, reason} ->
+        {:error, {:lua_error, reason}}
     end
   end
 

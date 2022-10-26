@@ -79,6 +79,10 @@ defmodule Cim.Store do
     {:error, :db_not_found}
   end
 
+  defp send_response({:error, {:lua_error, _reason}}) do
+    {:error, :lua_error}
+  end
+
   defp send_response(_) do
     {:error, :not_found}
   end
