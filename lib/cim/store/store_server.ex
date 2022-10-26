@@ -9,6 +9,7 @@ defmodule Cim.StoreServer do
   @type value :: binary
   @type database_name :: binary
   @type key :: binary
+  @type error_reason :: binary
   @type database :: map()
 
   @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
@@ -17,7 +18,6 @@ defmodule Cim.StoreServer do
   end
 
   @impl GenServer
-  @spec init(any) :: {:ok, any}
   def init(state) do
     {:ok, state}
   end
@@ -27,10 +27,12 @@ defmodule Cim.StoreServer do
     GenServer.call(__MODULE__, {:retrieve_key, database_name, key})
   end
 
+  @spec retrieve_database(database_name()) :: {:ok, database()} | {:ok, nil}
   def retrieve_database(database_name) do
     GenServer.call(__MODULE__, {:retrieve_database, database_name})
   end
 
+  @spec execute_lua(any, any) :: {:ok, value()} | {:ok, nil} | {:error, any()}
   def execute_lua(database_name, script) do
     GenServer.call(__MODULE__, {:execute_lua, database_name, script})
   end
@@ -65,53 +67,40 @@ defmodule Cim.StoreServer do
     {:reply, {:ok, get_in(state, [database, key])}, state}
   end
 
-  @impl GenServer
   def handle_call({:put_key_new_database, database, key, value}, _from, state) do
     {:reply, :ok, Map.put(state, database, %{to_string(key) => value})}
   end
 
-  @impl GenServer
   def handle_call({:put_key_existing_database, database, key, value}, _from, state) do
     new_state = put_in(state, [database, to_string(key)], value)
     {:reply, :ok, new_state}
   end
 
-  @impl GenServer
   def handle_call({:delete_key, database, key}, _from, state) do
     {deleted_key, new_state} = pop_in(state, [database, key])
     {:reply, {:ok, deleted_key}, new_state}
   end
 
-  @impl GenServer
   def handle_call({:delete_database, database}, _from, state) do
     {deleted_database, new_state} = Map.pop(state, database)
     {:reply, {:ok, deleted_database}, new_state}
   end
 
-  @impl GenServer
   def handle_call({:database_exists, database}, _from, state) do
     {:reply, Map.has_key?(state, database), state}
   end
 
-  @impl GenServer
   def handle_call({:retrieve_database, database}, _from, state) do
     {:reply, Map.get(state, database), state}
   end
 
-  @impl GenServer
   def handle_call({:execute_lua, database_name, script}, _from, state) do
-    db = Map.get(state, database_name)
-
-    if db do
-      case Luerl.execute(script, db) do
-        {:ok, value, updated_db} ->
-          {:reply, {:ok, value}, Map.put(state, database_name, updated_db)}
-
-        {:error, reason} ->
-          {:reply, {:error, reason}, state}
-      end
+    with {:ok, db} <- Map.fetch(state, database_name),
+         {:ok, value, updated_db} <- Luerl.execute(script, db) do
+      {:reply, {:ok, value}, Map.put(state, database_name, updated_db)}
     else
-      {:reply, {:error, :db_not_found}, state}
+      :error -> {:reply, {:error, :db_not_found}, state}
+      {:error, reason} -> {:reply, {:error, reason}, state}
     end
   end
 end

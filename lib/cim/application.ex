@@ -8,12 +8,13 @@ defmodule Cim.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      Cim.StoreServer,
-      {Plug.Cowboy, scheme: :http, plug: Cim.Router, options: [port: port()]}
-      # Starts a worker by calling: Cim.Worker.start_link(arg)
-      # {Cim.Worker, arg}
-    ]
+    children =
+      [
+        {Plug.Cowboy, scheme: :http, plug: Cim.Router, options: [port: port()]}
+        # Starts a worker by calling: Cim.Worker.start_link(arg)
+        # {Cim.Worker, arg}
+      ]
+      |> add_server()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -27,8 +28,24 @@ defmodule Cim.Application do
   defp port() do
     port = Application.fetch_env!(:cim, :port)
 
-    case Integer.parse(port) do
-      {value, _} -> value
+    case String.to_integer(port) do
+      value ->
+        value
     end
+  end
+
+  defp add_server(children) do
+    if start_server?() do
+      [
+        Cim.StoreServer
+        | children
+      ]
+    else
+      children
+    end
+  end
+
+  defp start_server?() do
+    Application.get_env(:cim, :server, true)
   end
 end

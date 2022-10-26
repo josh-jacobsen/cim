@@ -14,8 +14,7 @@ defmodule Cim.Router do
     if Store.database_exists?(database) do
       case Store.retrieve_key(database, key) do
         {:ok, value} ->
-          conn
-          |> send_success_response(value)
+          send_success_response(conn, value)
 
         {:error, _reason} ->
           send_not_found_response(conn, "Key not found")
@@ -30,9 +29,6 @@ defmodule Cim.Router do
       {:ok, body, _} ->
         Store.put_key(database, key, body)
         send_success_response(conn, [])
-
-      _ ->
-        send_400_error_response(conn, "Bad request")
     end
   end
 

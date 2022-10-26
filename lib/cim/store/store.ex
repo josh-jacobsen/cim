@@ -63,13 +63,13 @@ defmodule Cim.Store do
     {:ok, value}
   end
 
-  defp send_response(value) when is_map(value) do
-    {:ok, value}
-  end
+  # defp send_response(value) when is_map(value) do
+  #   {:ok, value}
+  # end
 
-  defp send_response(:ok) do
-    {:ok, nil}
-  end
+  # defp send_response(:ok) do
+  #   {:ok, nil}
+  # end
 
   defp send_response({:error, :value_not_found}) do
     {:error, :value_not_found}
