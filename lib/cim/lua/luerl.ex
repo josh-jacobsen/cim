@@ -1,4 +1,8 @@
 defmodule Cim.Luerl do
+  @moduledoc """
+  Custom module that wraps the luerl library
+  """
+
   @spec execute(String.t(), map()) :: {:ok, String.t(), map()} | {:error, any()}
   def execute(code, values) do
     init()

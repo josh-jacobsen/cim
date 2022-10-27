@@ -10,7 +10,8 @@ defmodule Cim.Application do
   def start(_type, _args) do
     children =
       [
-        {Plug.Cowboy, scheme: :http, plug: Cim.Router, options: [port: port()]}
+        Cim.StoreServer
+        # {Plug.Cowboy, scheme: :http, plug: Cim.Router, options: [port: port()]}
         # Starts a worker by calling: Cim.Worker.start_link(arg)
         # {Cim.Worker, arg}
       ]
@@ -37,7 +38,7 @@ defmodule Cim.Application do
   defp add_server(children) do
     if start_server?() do
       [
-        Cim.StoreServer
+        {Plug.Cowboy, scheme: :http, plug: Cim.Router, options: [port: port()]}
         | children
       ]
     else

@@ -27,11 +27,6 @@ defmodule Cim.StoreServer do
     GenServer.call(__MODULE__, {:retrieve_key, database_name, key})
   end
 
-  @spec retrieve_database(database_name()) :: {:ok, database()} | {:ok, nil}
-  def retrieve_database(database_name) do
-    GenServer.call(__MODULE__, {:retrieve_database, database_name})
-  end
-
   @spec execute_lua(any, any) :: {:ok, value()} | {:ok, nil} | {:error, any()}
   def execute_lua(database_name, script) do
     GenServer.call(__MODULE__, {:execute_lua, database_name, script})
@@ -88,10 +83,6 @@ defmodule Cim.StoreServer do
 
   def handle_call({:database_exists, database}, _from, state) do
     {:reply, Map.has_key?(state, database), state}
-  end
-
-  def handle_call({:retrieve_database, database}, _from, state) do
-    {:reply, Map.get(state, database), state}
   end
 
   def handle_call({:execute_lua, database_name, script}, _from, state) do

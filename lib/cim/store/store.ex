@@ -26,13 +26,6 @@ defmodule Cim.Store do
     StoreServer.database_exists?(database_name)
   end
 
-  @spec retrieve_database(StoreServer.database_name()) ::
-          {:error, :not_found} | {:ok, binary | map}
-  def retrieve_database(database_name) do
-    StoreServer.retrieve_database(database_name)
-    |> send_response()
-  end
-
   @spec delete_key(StoreServer.database_name(), StoreServer.key()) ::
           {:error, :not_found} | {:ok, binary}
   def delete_key(database, key) do
@@ -40,50 +33,31 @@ defmodule Cim.Store do
     |> send_response()
   end
 
-  @spec delete_database(binary) :: {:error, :not_found} | {:ok, binary | map}
+  @spec delete_database(StoreServer.database_name()) :: {:error, :not_found} | {:ok, binary | map}
   def delete_database(database) do
     StoreServer.delete_database(database)
     |> send_response()
   end
 
+  @spec execute_lua(StoreServer.database_name(), String.t()) ::
+          {:error, :db_not_found | :lua_error}
+          | {:ok, nil | binary | map}
   def execute_lua(database_name, script) do
     StoreServer.execute_lua(database_name, script)
     |> send_response()
   end
 
-  defp send_response({:ok, ""}) do
-    {:ok, nil}
-  end
+  defp send_response({:ok, ""}), do: {:ok, nil}
 
-  defp send_response({:ok, value}) when is_binary(value) do
-    {:ok, value}
-  end
+  defp send_response({:ok, value}) when is_binary(value), do: {:ok, value}
 
-  defp send_response({:ok, value}) when is_map(value) do
-    {:ok, value}
-  end
+  defp send_response({:ok, value}) when is_map(value), do: {:ok, value}
 
-  # defp send_response(value) when is_map(value) do
-  #   {:ok, value}
-  # end
+  defp send_response({:error, :value_not_found}), do: {:error, :value_not_found}
 
-  # defp send_response(:ok) do
-  #   {:ok, nil}
-  # end
+  defp send_response({:error, :db_not_found}), do: {:error, :db_not_found}
 
-  defp send_response({:error, :value_not_found}) do
-    {:error, :value_not_found}
-  end
+  defp send_response({:error, {:lua_error, _reason}}), do: {:error, :lua_error}
 
-  defp send_response({:error, :db_not_found}) do
-    {:error, :db_not_found}
-  end
-
-  defp send_response({:error, {:lua_error, _reason}}) do
-    {:error, :lua_error}
-  end
-
-  defp send_response(_) do
-    {:error, :not_found}
-  end
+  defp send_response(_), do: {:error, :not_found}
 end
