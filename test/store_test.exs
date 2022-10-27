@@ -1,4 +1,4 @@
-defmodule Cim.StoreServerTest do
+defmodule Cim.StoreTest do
   use ExUnit.Case
 
   alias Cim.Store
@@ -59,7 +59,7 @@ defmodule Cim.StoreServerTest do
              {:ok, nil}
   end
 
-  test "invalid lua returns :lua_error" do
+  test "invalid lua returns :lua_error without specific" do
     Store.put_key("db_exists", "my_key", "hello, world!")
 
     assert Store.execute_lua("db_exists", "return this.is.not.lua(\"my_key\")") ==

@@ -27,7 +27,7 @@ defmodule Cim.StoreServer do
     GenServer.call(__MODULE__, {:retrieve_key, database_name, key})
   end
 
-  @spec execute_lua(any, any) :: {:ok, value()} | {:ok, nil} | {:error, any()}
+  @spec execute_lua(database_name(), String.t()) :: {:ok, value()} | {:ok, nil} | {:error, any()}
   def execute_lua(database_name, script) do
     GenServer.call(__MODULE__, {:execute_lua, database_name, script})
   end
