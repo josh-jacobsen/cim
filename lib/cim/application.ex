@@ -27,32 +27,17 @@ defmodule Cim.Application do
   end
 
   defp port() do
-    port = Application.fetch_env!(:cim, :port)
-
-    with {:ok, value} <- valid_port(port),
-         {:ok, port_as_integer} <- convert_to_integer(value) do
-      port_as_integer
-    else
-      _ ->
-        raise ArgumentError, message: "#{port} is not a valid integer value"
-    end
+    Application.fetch_env!(:cim, :port)
+    |> convert_to_integer!()
   end
 
-  defp valid_port(port) do
-    if Regex.match?(~r{\A\d*\z}, port) do
-      {:ok, port}
-    else
-      {:error, :invalid_port}
-    end
-  end
-
-  defp convert_to_integer(port) do
+  defp convert_to_integer!(port) do
     case Integer.parse(port) do
-      {value, _} ->
-        {:ok, value}
+      {value, ""} ->
+        value
 
-      :error ->
-        {:error, :invalid_integer}
+      _ ->
+        raise ArgumentError, message: "Invalid integer value for port"
     end
   end
 
